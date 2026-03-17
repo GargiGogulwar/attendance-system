@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: Arial, sans-serif; font-size: 11pt; padding: 30px 40px; }
+
+  .header-table { width: 100%; border-collapse: collapse; border: 1.5px solid black; margin-bottom: 4px; }
+  .header-table td, .header-table th { border: 1px solid black; padding: 4px 8px; vertical-align: middle; }
+  .logo-cell { width: 80px; text-align: center; }
+  .logo-cell img { width: 70px; height: 70px; object-fit: contain; }
+  .college-name { text-align: center; font-weight: bold; font-size: 12pt; line-height: 1.5; }
+  .record-cell { font-size: 9pt; vertical-align: top; }
+  .letter-title { font-weight: bold; font-size: 11pt; padding: 6px 8px !important; }
+
+  .meta-row { font-size: 10.5pt; margin: 8px 0 4px 0; }
+  .body-text { font-size: 10.5pt; margin: 6px 0; line-height: 1.5; }
+
+  .att-table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 10pt; }
+  .att-table th { background-color: #d9e1f2; border: 1px solid black; padding: 5px 8px; text-align: center; font-weight: bold; }
+  .att-table td { border: 1px solid black; padding: 4px 8px; text-align: center; }
+  .att-table td:nth-child(2) { text-align: left; }
+  .att-table tr.summary-row td { font-weight: bold; background-color: #f2f2f2; }
+
+  .signatures { display: flex; justify-content: space-between; margin-top: 40px; font-size: 10.5pt; }
+  .sig-block { text-align: center; }
+  .sig-title { font-weight: bold; }
+</style>
+</head>
+<body>
+
+<table class="header-table">
+  <tr>
+    <td class="logo-cell" rowspan="3">
+      <img src="{{logo_src}}" alt="College Logo">
+    </td>
+    <td class="college-name" rowspan="3">
+      Pimpri Chinchwad Education Trust's<br>
+      <strong>Pimpri Chinchwad College of Engineering</strong>
+    </td>
+    <td class="record-cell">Record No.: ACAD/R/23</td>
+  </tr>
+  <tr>
+    <td class="record-cell">Revision: 01</td>
+  </tr>
+  <tr>
+    <td class="record-cell">Date: 28/08/2024</td>
+  </tr>
+  <tr>
+    <td colspan="3" class="letter-title">Letter to Parents of Poor Performing Students</td>
+  </tr>
+</table>
+
+<p class="meta-row"><strong>Department:</strong> Computer Engineering &nbsp;&nbsp;&nbsp; <strong>Academic Year:</strong> 2025-2026 &nbsp;&nbsp;&nbsp; <strong>Semester:</strong> I / II</p>
+
+<p class="body-text">To,</p>
+<p class="body-text">Dear Sir,</p>
+<p class="body-text">We are sorry to inform you that attendance of your ward <strong>{{name}}</strong> PRN No. <strong>{{prn}}</strong> Year <strong>B.Tech</strong> Div <strong>{{div}}</strong> is poor.</p>
+<p class="body-text">1. Subject wise attendance up to <strong>{{upto_date}}</strong> is as follows.</p>
+
+<table class="att-table">
+  <thead>
+    <tr>
+      <th>Sr. No</th>
+      <th>Subject</th>
+      <th>Theory Attendance (%)</th>
+      <th>Practical Attendance (%)</th>
+    </tr>
+  </thead>
+  <tbody>
+    {{rows}}
+    <tr class="summary-row">
+      <td colspan="2">Average Attendance (%)</td>
+      <td>{{avg_th}}</td>
+      <td>{{avg_pr}}</td>
+    </tr>
+    <tr class="summary-row">
+      <td colspan="2">Total Attendance (%)</td>
+      <td colspan="2">{{total}}</td>
+    </tr>
+  </tbody>
+</table>
+
+<p class="body-text">If he/she fails to improve attendance and to satisfy the minimum criteria of 75% attendance in theory and practical's conducted, by college, he/she shall not be eligible to appear for Final SA in Semester I / II Theory Examination.</p>
+
+<div class="signatures">
+  <div class="sig-block"><div class="sig-title">Class Teacher</div><div>Mr. Ganesh Kadam</div></div>
+  <div class="sig-block"><div class="sig-title">Academic Coordinator</div><div>Mr. Atul Pawar</div></div>
+  <div class="sig-block"><div class="sig-title">Head of the Department</div><div>Dr. Sonali Patil</div></div>
+</div>
+
+</body>
+</html>
