@@ -91,7 +91,7 @@ Columns it looks for:
 ## 🔧 Customization
 
 ### Change signature names
-Edit `server/index.js` near the bottom — search for `Mr. Ganesh Kadam`, `Mr. Atul Pawar`, `Dr. Sonali Patil`.
+
 
 ### Change 75% threshold
 In `server/index.js`, find:
