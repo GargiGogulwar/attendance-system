@@ -1,5 +1,6 @@
 # 🏫 Attendance Defaulter System
 **Pimpri Chinchwad College of Engineering — Computer Engineering**
+**Live - https://attendance-system-tau-liart.vercel.app/**
 
 Upload the attendance Excel sheet → auto-detects defaulters (<75%) → generate letters as PDF or DOCX.
 
@@ -83,7 +84,7 @@ Columns it looks for:
 - Average TH / PR attendance row
 - Total attendance row
 - Signatures: Class Teacher, Academic Coordinator, HOD
-- **No date** (as requested)
+- **No date** 
 
 ---
 
