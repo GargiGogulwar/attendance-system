@@ -464,13 +464,45 @@ app.post("/generate/docx", async (req, res) => {
 
   const attTable = new Table({ width: { size: 9200, type: WidthType.DXA }, columnWidths: colWidths, rows: attTableRows });
 
-  // ── Signature paragraphs (no table) ──
-  const sigLine = (label, name) => new Paragraph({
-    alignment: AlignmentType.LEFT,
-    spacing: { before: 60, after: 20 },
-    children: [
-      new TextRun({ text: label + ": ", bold: true, size: 20, font: "Arial" }),
-      new TextRun({ text: name, size: 20, font: "Arial" }),
+  // ── Signature table (borderless, 3 columns) ──
+  const nb = { style: BorderStyle.NONE, size: 0, color: "FFFFFF" };
+  const noBordersAll = { top: nb, bottom: nb, left: nb, right: nb, insideHorizontal: nb, insideVertical: nb };
+  const sigTable = new Table({
+    width: { size: 9360, type: WidthType.DXA },
+    columnWidths: [3120, 3120, 3120],
+    borders: noBordersAll,
+    rows: [
+      new TableRow({
+        children: [
+          new TableCell({
+            borders: { top: nb, bottom: nb, left: nb, right: nb },
+            width: { size: 3120, type: WidthType.DXA },
+            margins: { top: 60, bottom: 60, left: 0, right: 60 },
+            children: [
+              new Paragraph({ children: [new TextRun({ text: "Class Teacher", bold: true, size: 20, font: "Arial" })] }),
+              new Paragraph({ children: [new TextRun({ text: classTeacher || "", size: 20, font: "Arial" })] }),
+            ]
+          }),
+          new TableCell({
+            borders: { top: nb, bottom: nb, left: nb, right: nb },
+            width: { size: 3120, type: WidthType.DXA },
+            margins: { top: 60, bottom: 60, left: 0, right: 60 },
+            children: [
+              new Paragraph({ children: [new TextRun({ text: "Academic Coordinator", bold: true, size: 20, font: "Arial" })] }),
+              new Paragraph({ children: [new TextRun({ text: academicCoordinator || "", size: 20, font: "Arial" })] }),
+            ]
+          }),
+          new TableCell({
+            borders: { top: nb, bottom: nb, left: nb, right: nb },
+            width: { size: 3120, type: WidthType.DXA },
+            margins: { top: 60, bottom: 60, left: 0, right: 0 },
+            children: [
+              new Paragraph({ children: [new TextRun({ text: "Head of the Department", bold: true, size: 20, font: "Arial" })] }),
+              new Paragraph({ children: [new TextRun({ text: "Dr. Sonali Patil", size: 20, font: "Arial" })] }),
+            ]
+          }),
+        ]
+      })
     ]
   });
 
@@ -525,9 +557,7 @@ app.post("/generate/docx", async (req, res) => {
         p("If he/she fails to improve attendance and to satisfy the minimum criteria of 75% attendance in theory and practical's conducted, by college, he/she shall not be eligible to appear for Final SA in Semester I / II Theory Examination."),
         p(""),
         p(""),
-        sigLine("Class Teacher", classTeacher || ""),
-        sigLine("Academic Coordinator", academicCoordinator || ""),
-        sigLine("Head of the Department", "Dr. Sonali Patil"),
+        sigTable,
       ]
     }]
   });
