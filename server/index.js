@@ -95,7 +95,7 @@ app.post("/upload", upload.single("file"), (req, res) => {
     const subjects = extractSubjects(headers);
 
     // Read meta info from rows above header
-    let division = "A", semester = "I", academicYear = "2025-2026", uptoDate = "";
+    let division = "A", semester = "I", academicYear = "2025-2026", uptoDate = "", attendanceDuration = "";
     for (let i = 0; i < headerRowIdx; i++) {
       const rowStr = raw[i].join(" ");
       const divMatch = rowStr.match(/Division\s*:\s*(\w+)/i);
@@ -104,10 +104,12 @@ app.post("/upload", upload.single("file"), (req, res) => {
       if (semMatch) semester = semMatch[1];
       const ayMatch = rowStr.match(/Academic Year\s*:\s*([\d\-\/]+)/i);
       if (ayMatch) academicYear = ayMatch[1];
-      const dateMatch = rowStr.match(/(\d{2}[\/\-]\w+[\/\-]\d{4})\s*to\s*(\d{2}[\/\-]\w+[\/\-]\d{4})/i);
-      if (dateMatch) uptoDate = dateMatch[2];
-      const dateMatch2 = rowStr.match(/to\s+(\d{2}-\w+-\d{4})/i);
-      if (dateMatch2) uptoDate = dateMatch2[1];
+      // Extract full duration string e.g. "07-July-2025 to 06-November-2025"
+      const durMatch = rowStr.match(/(\d{2}[-\/]\w+[-\/]\d{4})\s+to\s+(\d{2}[-\/]\w+[-\/]\d{4})/i);
+      if (durMatch) {
+        attendanceDuration = durMatch[1] + " to " + durMatch[2];
+        uptoDate = durMatch[2];
+      }
     }
 
     // Data rows start after header + 1 (totals row)
@@ -133,7 +135,7 @@ app.post("/upload", upload.single("file"), (req, res) => {
       }
     }
 
-    res.json({ students, subjects, division, semester, academicYear, uptoDate });
+    res.json({ students, subjects, division, semester, academicYear, uptoDate, attendanceDuration });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: err.message });
@@ -157,7 +159,7 @@ function avg(rows, key) {
 
 // ─── Generate PDF (pdfkit — no Chrome/puppeteer needed) ──────────────────────
 app.post("/generate/pdf", async (req, res) => {
-  const { student, subjects, division, semester, uptoDate } = req.body;
+  const { student, subjects, division, semester, uptoDate, attendanceDuration, classTeacher, academicCoordinator } = req.body;
   const rows = buildRows(student, subjects);
   const avgTH = avg(rows, "th");
   const avgPR = avg(rows, "pr");
@@ -246,8 +248,8 @@ app.post("/generate/pdf", async (req, res) => {
   y += 18;
 
   doc.font("Helvetica").fontSize(9)
-     .text("1. Subject wise attendance up to ", LEFT, y, { continued: true })
-     .font("Helvetica-Bold").text(`${uptoDate || ""}`, { continued: true })
+     .text("1. Subject wise attendance from ", LEFT, y, { continued: true })
+     .font("Helvetica-Bold").text(`${attendanceDuration || uptoDate || ""}`, { continued: true })
      .font("Helvetica").text(" is as follows.");
   y += 14;
 
@@ -306,8 +308,8 @@ app.post("/generate/pdf", async (req, res) => {
   // ── SIGNATURES ──
   const sigW = W / 3;
   const sigs = [
-    { title: "Class Teacher", name: "Mr. Ganesh Kadam" },
-    { title: "Academic Coordinator", name: "Mr. Atul Pawar" },
+    { title: "Class Teacher", name: classTeacher || "" },
+    { title: "Academic Coordinator", name: academicCoordinator || "" },
     { title: "Head of the Department", name: "Dr. Sonali Patil" },
   ];
   sigs.forEach((s, i) => {
@@ -330,7 +332,7 @@ app.post("/generate/pdf", async (req, res) => {
 
 // ─── Generate DOCX ────────────────────────────────────────────────────────────
 app.post("/generate/docx", async (req, res) => {
-  const { student, subjects, division, semester, uptoDate } = req.body;
+  const { student, subjects, division, semester, uptoDate, attendanceDuration, classTeacher, academicCoordinator } = req.body;
 
   const rows = buildRows(student, subjects);
   const avgTH = avg(rows, "th");
@@ -462,36 +464,13 @@ app.post("/generate/docx", async (req, res) => {
 
   const attTable = new Table({ width: { size: 9200, type: WidthType.DXA }, columnWidths: colWidths, rows: attTableRows });
 
-  // ── Signature table ──
-  const sigTable = new Table({
-    width: { size: 9360, type: WidthType.DXA },
-    columnWidths: [3120, 3120, 3120],
-    rows: [
-      new TableRow({
-        children: [
-          new TableCell({
-            borders: noBorders, width: { size: 3120, type: WidthType.DXA },
-            children: [
-              new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: "Class Teacher", bold: true, size: 20, font: "Arial" })] }),
-              new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: "Mr. Ganesh Kadam", size: 20, font: "Arial" })] }),
-            ]
-          }),
-          new TableCell({
-            borders: noBorders, width: { size: 3120, type: WidthType.DXA },
-            children: [
-              new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: "Academic Coordinator", bold: true, size: 20, font: "Arial" })] }),
-              new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: "Mr. Atul Pawar", size: 20, font: "Arial" })] }),
-            ]
-          }),
-          new TableCell({
-            borders: noBorders, width: { size: 3120, type: WidthType.DXA },
-            children: [
-              new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: "Head of the Department", bold: true, size: 20, font: "Arial" })] }),
-              new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: "Dr. Sonali Patil", size: 20, font: "Arial" })] }),
-            ]
-          }),
-        ]
-      })
+  // ── Signature paragraphs (no table) ──
+  const sigLine = (label, name) => new Paragraph({
+    alignment: AlignmentType.LEFT,
+    spacing: { before: 60, after: 20 },
+    children: [
+      new TextRun({ text: label + ": ", bold: true, size: 20, font: "Arial" }),
+      new TextRun({ text: name, size: 20, font: "Arial" }),
     ]
   });
 
@@ -535,8 +514,8 @@ app.post("/generate/docx", async (req, res) => {
         new Paragraph({
           spacing: { before: 80, after: 80 },
           children: [
-            new TextRun({ text: "1. Subject wise attendance up to ", size: 20, font: "Arial" }),
-            new TextRun({ text: uptoDate || "", bold: true, size: 20, font: "Arial" }),
+            new TextRun({ text: "1. Subject wise attendance from ", size: 20, font: "Arial" }),
+            new TextRun({ text: attendanceDuration || uptoDate || "", bold: true, size: 20, font: "Arial" }),
             new TextRun({ text: " is as follows.", size: 20, font: "Arial" }),
           ]
         }),
@@ -546,8 +525,9 @@ app.post("/generate/docx", async (req, res) => {
         p("If he/she fails to improve attendance and to satisfy the minimum criteria of 75% attendance in theory and practical's conducted, by college, he/she shall not be eligible to appear for Final SA in Semester I / II Theory Examination."),
         p(""),
         p(""),
-        p(""),
-        sigTable,
+        sigLine("Class Teacher", classTeacher || ""),
+        sigLine("Academic Coordinator", academicCoordinator || ""),
+        sigLine("Head of the Department", "Dr. Sonali Patil"),
       ]
     }]
   });
